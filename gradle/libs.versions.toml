@@ -1,0 +1,22 @@
+[versions]
+kotlin = "1.9.10"
+picocli = "4.7.4"
+logback = "1.4.11"
+
+[libraries]
+slf4j = { module = "org.slf4j:slf4j-api", version = "2.0.9" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+logback-core = { module = "ch.qos.logback:logback-core", version.ref = "logback" }
+picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
+kotlin-logging-jvm = { module = "io.github.oshai:kotlin-logging-jvm", version = "5.1.0" }
+
+[plugins]
+kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+kotlin-allopen = { id = "org.jetbrains.kotlin.plugin.allopen", version.ref = "kotlin" }
+
+spotless =  { id = "com.diffplug.spotless", version = "6.23.3" }
+test-logger =  { id = "com.adarshr.test-logger", version = "3.2.0" }
+shadow = { id = "com.github.johnrengelman.shadow", version = "8.1.1" }
