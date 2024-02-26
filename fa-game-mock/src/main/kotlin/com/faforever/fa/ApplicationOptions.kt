@@ -8,8 +8,8 @@ data class Endpoint(
 sealed interface LaunchOptions {
     data class Gpgnet(
         val lobbyServer: Endpoint,
-        val replayServer: Endpoint?,
-        val expectedPlayers: Int?,
+        val replayServer: Endpoint? = null,
+        val expectedPlayers: Int? = null,
     ) : LaunchOptions
 
     data class Replay(
@@ -44,7 +44,7 @@ enum class Faction {
 }
 
 data class CommanderOptions(
-    val faction: Faction?,
-    val teamId: Int?,
-    val mapPosition: Int?,
+    val faction: Faction? = null,
+    val teamId: Int? = null,
+    val mapPosition: Int? = null,
 )
