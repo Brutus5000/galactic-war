@@ -28,7 +28,7 @@ tasks {
 
     named<ShadowJar>("shadowJar") {
         manifest {
-            attributes(mapOf("Main-Class" to "com.faforever.gw.GwWrapperApplication"))
+            attributes(mapOf("Main-Class" to "com.faforever.fa.FaGameMockApplication"))
         }
     }
 }
