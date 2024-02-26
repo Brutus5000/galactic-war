@@ -1,5 +1,6 @@
 package com.faforever.fa
 
+import com.faforever.fa.util.SocketFactory
 import com.faforever.gpgnet.protocol.GpgnetMessage
 import com.faforever.gpgnet.protocol.ReceivedMessage
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -8,7 +9,6 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.PrintWriter
-import java.net.Socket
 
 private val log = KotlinLogging.logger {}
 
@@ -19,7 +19,7 @@ class GpgnetProcess(
     gameProcessOptions: GameProcessOptions,
 ) : AutoCloseable {
     private val gpgnetSocket =
-        Socket(
+        SocketFactory.createLocalTCPClientSocket(
             gpgnetOption.lobbyServer.host,
             gpgnetOption.lobbyServer.port,
         )

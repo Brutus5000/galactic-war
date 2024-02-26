@@ -112,7 +112,7 @@ class FaGameMockApplication : Callable<Int> {
     private var gameoptions: List<String> = emptyList()
 
     private fun parseGpgnetEndpoint(gpgnetHostPort: String): Endpoint {
-        val components = gpgnetHostPort.split(":", limit = 1)
+        val components = gpgnetHostPort.split(":", limit = 2)
 
         return try {
             Endpoint(

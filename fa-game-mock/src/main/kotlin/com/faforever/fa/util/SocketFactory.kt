@@ -2,11 +2,16 @@ package com.faforever.fa.util
 
 import dev.failsafe.Failsafe
 import dev.failsafe.RetryPolicy
+import io.github.oshai.kotlinlogging.KotlinLogging
 import java.net.DatagramSocket
 import java.net.InetAddress
 import java.net.ServerSocket
+import java.net.Socket
 import java.net.SocketException
+import java.time.Duration
 import kotlin.random.Random
+
+private val log = KotlinLogging.logger {}
 
 /**
  * Util class, which helps to build sockets and also allows mocking them for testing
@@ -29,7 +34,7 @@ object SocketFactory {
 
     fun createLocalUDPSocket(port: Int): DatagramSocket = DatagramSocket(port, InetAddress.getLoopbackAddress())
 
-    fun createLocalTCPSocket(
+    fun createLocalTCPServerSocket(
         portFrom: Int = 40_000,
         portTo: Int = 60_000,
         maxAttempts: Int = 10,
@@ -41,8 +46,26 @@ object SocketFactory {
                 .withMaxAttempts(maxAttempts)
                 .build(),
         ).get { _ ->
-            createLocalTCPSocket(Random.nextInt(portFrom, portTo))
+            createLocalTCPServerSocket(Random.nextInt(portFrom, portTo))
         }
 
-    fun createLocalTCPSocket(port: Int): ServerSocket = ServerSocket(port, 20, InetAddress.getLoopbackAddress())
+    fun createLocalTCPServerSocket(port: Int): ServerSocket = ServerSocket(port, 20, InetAddress.getLoopbackAddress())
+
+    fun createLocalTCPClientSocket(
+        host: String,
+        port: Int,
+        maxAttempts: Int = 10,
+    ): Socket =
+        Failsafe.with(
+            RetryPolicy.builder<Socket>()
+                .handle(SocketException::class.java)
+                .withMaxAttempts(maxAttempts)
+                .onFailedAttempt {
+                    log.warn { "Failed to connect to $host:$port (attempt ${it.attemptCount})" }
+                }
+                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(30))
+                .build(),
+        ).get { _ ->
+            Socket(host, port)
+        }
 }
