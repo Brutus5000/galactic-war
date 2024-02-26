@@ -1,4 +1,5 @@
 plugins {
+    id("maven-publish")
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.spotless)
 }
@@ -6,4 +7,15 @@ plugins {
 dependencies {
     implementation(libs.kotlin.logging.jvm)
     implementation(libs.guava)
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.faforever.fa"
+            artifactId = "fa-gpgnet"
+
+            from(components["java"])
+        }
+    }
 }
