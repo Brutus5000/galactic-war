@@ -33,3 +33,14 @@ tasks {
         }
     }
 }
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = "com.faforever.fa"
+            artifactId = "fa-game-mock"
+
+            from(components["java"])
+        }
+    }
+}
