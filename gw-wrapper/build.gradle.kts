@@ -10,7 +10,7 @@ dependencies {
     kapt(libs.picocli.codegen)
     implementation(libs.picocli)
     implementation(libs.kotlin.logging.jvm)
-    implementation(libs.slf4j)
+    implementation(libs.slf4j.api)
     implementation(libs.logback.classic)
     implementation(libs.logback.core)
 }

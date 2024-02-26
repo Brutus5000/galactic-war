@@ -1,7 +1,9 @@
 package com.faforever.gpgnet.protocol
 
+import com.fasterxml.jackson.annotation.JsonIncludeProperties
 import java.net.InetSocketAddress
 
+@JsonIncludeProperties(value = ["command", "args"])
 interface GpgnetMessage {
     interface ToGameMessage : GpgnetMessage
 

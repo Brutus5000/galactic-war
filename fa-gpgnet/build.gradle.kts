@@ -7,6 +7,7 @@ plugins {
 dependencies {
     implementation(libs.kotlin.logging.jvm)
     implementation(libs.guava)
+    implementation(libs.jackson.annotations)
 }
 
 publishing {

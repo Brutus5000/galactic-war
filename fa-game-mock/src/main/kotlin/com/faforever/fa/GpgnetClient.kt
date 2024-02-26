@@ -7,12 +7,13 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.io.BufferedReader
+import java.io.BufferedWriter
 import java.io.InputStreamReader
-import java.io.PrintWriter
+import java.io.OutputStreamWriter
 
 private val log = KotlinLogging.logger {}
 
-class GpgnetProcess(
+class GpgnetClient(
     gpgnetOption: LaunchOptions.Gpgnet,
     userOptions: UserOptions,
     commanderOptions: CommanderOptions,
@@ -22,11 +23,13 @@ class GpgnetProcess(
         SocketFactory.createLocalTCPClientSocket(
             gpgnetOption.lobbyServer.host,
             gpgnetOption.lobbyServer.port,
-        )
+        ).also {
+            log.info { "gpgnet socket connected (localPort=${it.localPort}, port=${it.port})" }
+        }
 
     private lateinit var gameState: GameState
 
-    private val writer = PrintWriter(gpgnetSocket.getOutputStream(), true)
+    private val writer = BufferedWriter(OutputStreamWriter(gpgnetSocket.getOutputStream()))
     private val reader = BufferedReader(InputStreamReader(gpgnetSocket.getInputStream()))
 
     private val objectMapper = jacksonObjectMapper()
@@ -34,24 +37,29 @@ class GpgnetProcess(
     fun runLoop() {
         log.info { "gpgnetLoop started" }
 
-        gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage)
+        Thread {
+            reader.lines()
+                .filter { it.isNotBlank() }
+                .map { objectMapper.readValue<ReceivedMessage>(it).tryParse() }
+                .forEach { message ->
+                    log.debug { "Received GpgNet message from client: $message" }
+                    check(message is GpgnetMessage.ToGameMessage) {
+                        "Received invalid or unparseable message $message"
+                    }
 
-        reader.lines()
-            .map { objectMapper.readValue<ReceivedMessage>(it).tryParse() }
-            .forEach { message ->
-                log.debug { "Received GpgNet message: $message" }
-                check(message is GpgnetMessage.ToGameMessage) {
-                    "Received invalid or unparseable message $message"
+                    gameState = gameState.process(message)
                 }
+        }.start()
 
-                gameState = gameState.process(message)
-            }
+        gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage)
     }
 
     private fun sendGpgnetMessage(fromGameMessage: GpgnetMessage.FromGameMessage) {
         val message = objectMapper.writeValueAsString(fromGameMessage)
         log.debug { "Sending GpgNet message: $message" }
         writer.write(message)
+        writer.newLine()
+        writer.flush()
     }
 
     override fun close() {
