@@ -9,7 +9,7 @@ class FaGameMock(
     userOptions: UserOptions = UserOptions(),
     commanderOptions: CommanderOptions = CommanderOptions(),
     gameProcessOptions: GameProcessOptions,
-) {
+) : AutoCloseable {
     private val gpgnetProcess: GpgnetClient
 
     init {
@@ -31,5 +31,9 @@ class FaGameMock(
         Thread.startVirtualThread {
             gpgnetProcess.runLoop()
         }
+    }
+
+    override fun close() {
+        gpgnetProcess.close()
     }
 }

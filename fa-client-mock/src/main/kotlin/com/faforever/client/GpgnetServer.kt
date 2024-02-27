@@ -22,23 +22,22 @@ class GpgnetServer(
             log.info { "Opened gpgnet server socket on port ${it.localPort}" }
         }
 
-    private lateinit var gameState: GameState
+    var gameState: GameState =
+        InitGameState(
+            publishEvent = publishEvent,
+            sendGpgnetMessage = ::sendGpgnetMessage,
+        )
+        private set
 
     private var writer: BufferedWriter? = null
     private var reader: BufferedReader? = null
 
     private val objectMapper = jacksonObjectMapper()
 
-    val port: Int? get() = gpgnetSocket.localPort
+    val port: Int get() = gpgnetSocket.localPort
 
     fun runLoop() {
         log.info { "GpgnetServer started" }
-
-        gameState =
-            InitGameState(
-                publishEvent = publishEvent,
-                sendGpgnetMessage = ::sendGpgnetMessage,
-            )
 
         runCatching {
             gpgnetSocket.accept().also {
@@ -67,8 +66,8 @@ class GpgnetServer(
         log.info { "GpgnetServer closed" }
     }
 
-    private fun sendGpgnetMessage(fromGameMessage: GpgnetMessage.FromGameMessage) {
-        val message = objectMapper.writeValueAsString(fromGameMessage)
+    fun sendGpgnetMessage(toGameMessage: GpgnetMessage.ToGameMessage) {
+        val message = objectMapper.writeValueAsString(toGameMessage)
         log.debug { "Sending GpgNet message: $message" }
         writer!!.write(message)
         writer!!.newLine()

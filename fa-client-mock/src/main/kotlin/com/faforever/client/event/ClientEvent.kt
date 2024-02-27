@@ -1,7 +1,9 @@
 package com.faforever.client.event
 
 sealed interface ClientEvent {
-    data object ConnectedToGame : ClientEvent
+    data object IdleGameState : ClientEvent
+
+    data object LobbyGameState : ClientEvent
 }
 
 abstract class ClientEventListener(
