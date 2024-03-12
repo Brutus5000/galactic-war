@@ -9,12 +9,19 @@ import java.net.InetSocketAddress
 
 private val log = KotlinLogging.logger {}
 
+enum class ConnectionRole {
+    UNDEFINED,
+    HOST,
+    CLIENT,
+}
+
 data class GameLobby(
     val lobbyInitMode: LobbyInitMode,
     val lobbyPort: Int,
     val localPlayerName: String,
     val localPlayerId: Int,
     val bufferSize: Int = 65536,
+    var connectionRole: ConnectionRole = ConnectionRole.UNDEFINED,
 ) : Closeable {
     @JvmInline
     value class PlayerId(val id: Int)

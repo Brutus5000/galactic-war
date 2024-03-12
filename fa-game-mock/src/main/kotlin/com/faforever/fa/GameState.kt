@@ -57,30 +57,51 @@ class LobbyGameState(
     override fun process(message: ToGameMessage): GameState =
         when (message) {
             is HostGameMessage -> {
-                log.info { "Hosting game on map ${message.mapName}" }
+                when (lobby.connectionRole) {
+                    ConnectionRole.UNDEFINED -> {
+                        log.info { "Hosting game on map ${message.mapName}" }
+                        lobby.connectionRole = ConnectionRole.HOST
+                    }
+
+                    else -> log.error { "Connection role already defined" }
+                }
                 this
             }
 
             is ConnectToPeerMessage -> {
-                lobby.connectTo(
-                    playerId = PlayerId(message.remotePlayerId),
-                    localPort = 0,
-                    destination = message.destination,
-                )
+                when (lobby.connectionRole) {
+                    ConnectionRole.UNDEFINED -> log.error { "Connection role undefined" }
+                    else ->
+                        lobby.connectTo(
+                            playerId = PlayerId(message.remotePlayerId),
+                            localPort = 0,
+                            destination = message.destination,
+                        )
+                }
                 this
             }
 
             is JoinGameMessage -> {
-                lobby.connectTo(
-                    playerId = PlayerId(message.remotePlayerId),
-                    localPort = 0,
-                    destination = message.destination,
-                )
+                when (lobby.connectionRole) {
+                    ConnectionRole.UNDEFINED -> {
+                        lobby.connectionRole = ConnectionRole.CLIENT
+                        lobby.connectTo(
+                            playerId = PlayerId(message.remotePlayerId),
+                            localPort = 0,
+                            destination = message.destination,
+                        )
+                    }
+
+                    else -> log.error { "Connection role already defined" }
+                }
                 this
             }
 
             is DisconnectFromPeerMessage -> {
-                lobby.disconnectFrom(PlayerId(message.remotePlayerId))
+                when (lobby.connectionRole) {
+                    ConnectionRole.UNDEFINED -> log.error { "Connection role undefined" }
+                    else -> lobby.disconnectFrom(PlayerId(message.remotePlayerId))
+                }
                 this
             }
 
