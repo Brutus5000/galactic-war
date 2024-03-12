@@ -8,3 +8,4 @@ pluginManagement {
 rootProject.name = "galactic-war"
 include(":gw-wrapper")
 include(":fa-gpgnet")
+include(":fa-game-mock")
