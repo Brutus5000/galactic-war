@@ -1,8 +1,8 @@
-package com.faforever.gpgnet
+package com.faforever.gpgnet.protocol
 
-import com.faforever.gpgnet.GpgnetMessage.FromGameMessage
+import com.faforever.gpgnet.protocol.GpgnetMessage.FromGameMessage
 
-enum class GameState(val gpgnetString: String) {
+enum class GameStateEnum(val gpgnetString: String) {
     NONE("None"),
     IDLE("Idle"),
     LOBBY("Lobby"),
@@ -27,7 +27,7 @@ enum class LobbyInitMode(val faId: Int) {
     }
 }
 
-data class GameStateMessage(val gameState: GameState) : FromGameMessage {
+data class GameStateMessage(val gameState: GameStateEnum) : FromGameMessage {
     companion object {
         const val COMMAND = "GameState"
     }

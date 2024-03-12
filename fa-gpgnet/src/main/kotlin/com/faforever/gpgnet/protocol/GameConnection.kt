@@ -1,6 +1,7 @@
-package com.faforever.gpgnet
+package com.faforever.gpgnet.protocol
 
-import com.faforever.gpgnet.GpgnetMessage.ToGameMessage
+import com.faforever.gpgnet.protocol.GpgnetMessage.ToGameMessage
+import java.net.InetSocketAddress
 
 data class CreateLobbyMessage(
     val lobbyInitMode: LobbyInitMode,
@@ -14,13 +15,14 @@ data class CreateLobbyMessage(
     }
 
     override val command = COMMAND
-    override val args = listOf(
-        lobbyInitMode.faId,
-        lobbyPort,
-        localPlayerName,
-        localPlayerId,
-        unknownParameter,
-    )
+    override val args =
+        listOf(
+            lobbyInitMode.faId,
+            lobbyPort,
+            localPlayerName,
+            localPlayerId,
+            unknownParameter,
+        )
 }
 
 data class HostGameMessage(val mapName: String) : ToGameMessage {
@@ -32,24 +34,24 @@ data class HostGameMessage(val mapName: String) : ToGameMessage {
     override val args = listOf(mapName)
 }
 
-data class JoinGameMessage(val remotePlayerLogin: String, val remotePlayerId: Int, val destination: String) :
+data class JoinGameMessage(val remotePlayerLogin: String, val remotePlayerId: Int, val destination: InetSocketAddress) :
     ToGameMessage {
     companion object {
         const val COMMAND = "JoinGame"
     }
 
     override val command = COMMAND
-    override val args = listOf(destination, remotePlayerLogin, remotePlayerId)
+    override val args = listOf("${destination.hostName}:${destination.port}", remotePlayerLogin, remotePlayerId)
 }
 
-data class ConnectToPeerMessage(val remotePlayerLogin: String, val remotePlayerId: Int, val destination: String) :
+data class ConnectToPeerMessage(val remotePlayerLogin: String, val remotePlayerId: Int, val destination: InetSocketAddress) :
     ToGameMessage {
     companion object {
         const val COMMAND = "ConnectToPeer"
     }
 
     override val command = COMMAND
-    override val args = listOf(destination, remotePlayerLogin, remotePlayerId)
+    override val args = listOf("${destination.hostName}:${destination.port}", remotePlayerLogin, remotePlayerId)
 }
 
 data class DisconnectFromPeerMessage(val remotePlayerId: Int) : ToGameMessage {

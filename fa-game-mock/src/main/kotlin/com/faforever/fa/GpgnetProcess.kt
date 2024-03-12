@@ -1,13 +1,7 @@
 package com.faforever.fa
 
-import com.faforever.gpgnet.ConnectToPeerMessage
-import com.faforever.gpgnet.DisconnectFromPeerMessage
-import com.faforever.gpgnet.GameState
-import com.faforever.gpgnet.GameStateMessage
-import com.faforever.gpgnet.GpgnetMessage
-import com.faforever.gpgnet.HostGameMessage
-import com.faforever.gpgnet.JoinGameMessage
-import com.faforever.gpgnet.ReceivedMessage
+import com.faforever.gpgnet.protocol.GpgnetMessage
+import com.faforever.gpgnet.protocol.ReceivedMessage
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -30,19 +24,17 @@ class GpgnetProcess(
             gpgnetOption.lobbyServer.port,
         )
 
+    private lateinit var gameState: GameState
+
     private val writer = PrintWriter(gpgnetSocket.getOutputStream(), true)
     private val reader = BufferedReader(InputStreamReader(gpgnetSocket.getInputStream()))
 
     private val objectMapper = jacksonObjectMapper()
 
-    private val gpgnetListenerThread: Thread =
-        Thread({ gpgnetLoop() }, "gpgnetListener")
-            .apply { start() }
-
-    fun gpgnetLoop() {
+    fun runLoop() {
         log.info { "gpgnetLoop started" }
 
-        sendGameState(GameState.IDLE)
+        gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage)
 
         reader.lines()
             .map { objectMapper.readValue<ReceivedMessage>(it).tryParse() }
@@ -52,19 +44,8 @@ class GpgnetProcess(
                     "Received invalid or unparseable message $message"
                 }
 
-                when (message) {
-                    is HostGameMessage -> sendGameState(GameState.LOBBY)
-                    is JoinGameMessage -> sendGameState(GameState.LOBBY)
-                    is ConnectToPeerMessage -> TODO("Open UDP port")
-                    is DisconnectFromPeerMessage -> TODO("Close UDP port")
-                    else -> Unit
-                }
+                gameState = gameState.process(message)
             }
-    }
-
-    private fun sendGameState(gameState: GameState) {
-        log.info { "Setting gameState to $gameState" }
-        sendGpgnetMessage(GameStateMessage(GameState.IDLE))
     }
 
     private fun sendGpgnetMessage(fromGameMessage: GpgnetMessage.FromGameMessage) {

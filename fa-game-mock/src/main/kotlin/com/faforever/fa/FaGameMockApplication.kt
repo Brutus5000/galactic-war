@@ -185,6 +185,18 @@ class FaGameMockApplication : Callable<Int> {
         log.info { userOptions }
         log.info { commanderOptions }
 
+        when (launchOptions) {
+            is LaunchOptions.Gpgnet ->
+                GpgnetProcess(
+                    launchOptions,
+                    userOptions,
+                    commanderOptions,
+                    gameProcessOptions,
+                ).runLoop()
+            is LaunchOptions.Offline -> log.error { "Offline launching is not supported." }
+            is LaunchOptions.Replay -> log.error { "Replay launching is not supported." }
+        }
+
         return 0
     }
 }
