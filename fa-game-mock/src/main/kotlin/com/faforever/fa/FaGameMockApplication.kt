@@ -8,7 +8,7 @@ import java.lang.IllegalArgumentException
 import java.util.concurrent.Callable
 import kotlin.system.exitProcess
 
-private val logger = KotlinLogging.logger {}
+private val log = KotlinLogging.logger {}
 
 @CommandLine.Command(
     name = "fa-game-mock",
@@ -136,6 +136,7 @@ class FaGameMockApplication : Callable<Int> {
                     LaunchOptions.Gpgnet(
                         lobbyServer = gpgnetEndpoint,
                         replayServer = null,
+                        expectedPlayers = expectedPlayers,
                     )
                 replayPath != null ->
                     LaunchOptions.Replay(
@@ -179,10 +180,10 @@ class FaGameMockApplication : Callable<Int> {
                 mapPosition = mapPosition,
             )
 
-        logger.info { launchOptions }
-        logger.info { gameProcessOptions }
-        logger.info { userOptions }
-        logger.info { commanderOptions }
+        log.info { launchOptions }
+        log.info { gameProcessOptions }
+        log.info { userOptions }
+        log.info { commanderOptions }
 
         return 0
     }

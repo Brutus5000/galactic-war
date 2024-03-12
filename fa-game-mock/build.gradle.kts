@@ -7,12 +7,18 @@ plugins {
 }
 
 dependencies {
+    implementation(project(":fa-gpgnet"))
+
     kapt(libs.picocli.codegen)
     implementation(libs.picocli)
     implementation(libs.kotlin.logging.jvm)
     implementation(libs.slf4j)
     implementation(libs.logback.classic)
     implementation(libs.logback.core)
+    implementation(libs.failsafe)
+    implementation(libs.jackson.databind)
+    implementation(libs.jackson.module.kotlin)
+    implementation(libs.jackson.datatype.jsr310)
 }
 
 tasks {

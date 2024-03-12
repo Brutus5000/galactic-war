@@ -9,6 +9,7 @@ sealed interface LaunchOptions {
     data class Gpgnet(
         val lobbyServer: Endpoint,
         val replayServer: Endpoint?,
+        val expectedPlayers: Int?,
     ) : LaunchOptions
 
     data class Replay(
