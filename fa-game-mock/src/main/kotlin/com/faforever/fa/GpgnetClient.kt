@@ -1,5 +1,6 @@
 package com.faforever.fa
 
+import com.faforever.fa.event.GameEvent
 import com.faforever.fa.util.SocketFactory
 import com.faforever.gpgnet.protocol.GpgnetMessage
 import com.faforever.gpgnet.protocol.ReceivedMessage
@@ -18,6 +19,7 @@ class GpgnetClient(
     userOptions: UserOptions,
     commanderOptions: CommanderOptions,
     gameProcessOptions: GameProcessOptions,
+    val publishEvent: (GameEvent) -> Unit,
 ) : AutoCloseable {
     private val gpgnetSocket =
         SocketFactory.createLocalTCPClientSocket(
@@ -51,7 +53,7 @@ class GpgnetClient(
                 }
         }.start()
 
-        gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage)
+        gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage, publishEvent = publishEvent)
     }
 
     private fun sendGpgnetMessage(fromGameMessage: GpgnetMessage.FromGameMessage) {

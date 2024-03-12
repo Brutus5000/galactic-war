@@ -2,7 +2,7 @@ package com.faforever.fa
 
 import com.faforever.client.FaClientMock
 import com.faforever.client.event.ClientEvent
-import com.faforever.fa.util.EventCatcher
+import com.faforever.fa.util.ClientEventCatcher
 import io.kotest.assertions.nondeterministic.until
 import io.kotest.common.runBlocking
 import io.kotest.matchers.shouldBe
@@ -13,7 +13,7 @@ class FaGameMockIT {
     @Test
     fun connect() {
         // prepare
-        val clientConnectedCatcher = EventCatcher(ClientEvent.IdleGameState.javaClass)
+        val clientConnectedCatcher = ClientEventCatcher(ClientEvent.IdleGameState.javaClass)
 
         val gameClient =
             FaClientMock().apply {
@@ -22,7 +22,7 @@ class FaGameMockIT {
 
         val game =
             FaGameMock(
-                launchOptions = LaunchOptions.Gpgnet(lobbyServer = Endpoint("localhost", gameClient.gpgnetPort)),
+                launchOptions = LaunchOptions.Gpgnet(lobbyServer = Endpoint("127.0.0.1", gameClient.gpgnetPort)),
                 gameProcessOptions = GameProcessOptions(initLuaPath = "/init.lua"),
             ).also {
                 it.runInVirtualThread()
@@ -49,8 +49,8 @@ class FaGameMockIT {
     @Test
     fun createLobby() {
         // prepare
-        val idleGameStateCatcher = EventCatcher(ClientEvent.IdleGameState.javaClass)
-        val lobbyGameStateCatcher = EventCatcher(ClientEvent.LobbyGameState.javaClass)
+        val idleGameStateCatcher = ClientEventCatcher(ClientEvent.IdleGameState.javaClass)
+        val lobbyGameStateCatcher = ClientEventCatcher(ClientEvent.LobbyGameState.javaClass)
 
         val gameClient =
             FaClientMock().apply {
@@ -60,7 +60,7 @@ class FaGameMockIT {
 
         val game =
             FaGameMock(
-                launchOptions = LaunchOptions.Gpgnet(lobbyServer = Endpoint("localhost", gameClient.gpgnetPort)),
+                launchOptions = LaunchOptions.Gpgnet(lobbyServer = Endpoint("127.0.0.1", gameClient.gpgnetPort)),
                 gameProcessOptions = GameProcessOptions(initLuaPath = "/init.lua"),
             ).also {
                 it.runInVirtualThread()

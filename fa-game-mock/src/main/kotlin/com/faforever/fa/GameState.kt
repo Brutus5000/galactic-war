@@ -1,6 +1,7 @@
 package com.faforever.fa
 
 import com.faforever.fa.GameLobby.PlayerId
+import com.faforever.fa.event.GameEvent
 import com.faforever.gpgnet.protocol.ConnectToPeerMessage
 import com.faforever.gpgnet.protocol.CreateLobbyMessage
 import com.faforever.gpgnet.protocol.DisconnectFromPeerMessage
@@ -20,6 +21,7 @@ sealed interface GameState {
 
 class IdleGameState(
     val sendGpgnetMessage: (FromGameMessage) -> Unit,
+    val publishEvent: (GameEvent) -> Unit,
 ) : GameState {
     init {
         sendGpgnetMessage(GameStateMessage(GameStateEnum.IDLE))
@@ -36,7 +38,9 @@ class IdleGameState(
                             lobbyPort = message.lobbyPort,
                             localPlayerName = message.localPlayerName,
                             localPlayerId = message.localPlayerId,
+                            publishEvent = publishEvent,
                         ),
+                    publishEvent = publishEvent,
                 )
 
             else ->
@@ -49,6 +53,7 @@ class IdleGameState(
 class LobbyGameState(
     val sendGpgnetMessage: (FromGameMessage) -> Unit,
     val lobby: GameLobby,
+    val publishEvent: (GameEvent) -> Unit,
 ) : GameState {
     init {
         sendGpgnetMessage(GameStateMessage(GameStateEnum.LOBBY))
@@ -74,7 +79,6 @@ class LobbyGameState(
                     else ->
                         lobby.connectTo(
                             playerId = PlayerId(message.remotePlayerId),
-                            localPort = 0,
                             destination = message.destination,
                         )
                 }
@@ -87,7 +91,6 @@ class LobbyGameState(
                         lobby.connectionRole = ConnectionRole.CLIENT
                         lobby.connectTo(
                             playerId = PlayerId(message.remotePlayerId),
-                            localPort = 0,
                             destination = message.destination,
                         )
                     }

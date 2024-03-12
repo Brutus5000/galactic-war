@@ -1,5 +1,6 @@
 package com.faforever.fa
 
+import com.faforever.fa.event.GameEvent
 import com.faforever.fa.util.SocketFactory
 import com.faforever.gpgnet.protocol.LobbyInitMode
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -22,6 +23,7 @@ data class GameLobby(
     val localPlayerId: Int,
     val bufferSize: Int = 65536,
     var connectionRole: ConnectionRole = ConnectionRole.UNDEFINED,
+    val publishEvent: (GameEvent) -> Unit,
 ) : Closeable {
     @JvmInline
     value class PlayerId(val id: Int)
@@ -37,19 +39,22 @@ data class GameLobby(
 
     private val playerConnections: MutableMap<PlayerId, PlayerConnection> = mutableMapOf()
     private val lobbySocket = SocketFactory.createLocalUDPSocket(lobbyPort)
-    private val readingThread: Thread =
-        Thread(this::listeningLoop).apply {
+    private val buffer = ByteArray(bufferSize)
+
+    init {
+        Thread(this::listeningLoop, "udp-p$localPlayerId").apply {
             setUncaughtExceptionHandler { thread, throwable ->
                 log.error(throwable) { "Unexpected error in reading thread ${thread.name}: closing now)" }
                 close()
             }
             start()
+            log.debug { "reading thread started" }
         }
-    private val buffer = ByteArray(bufferSize)
+        publishEvent(GameEvent.LobbyOpened(this))
+    }
 
     fun connectTo(
         playerId: PlayerId,
-        localPort: Int,
         destination: InetSocketAddress,
     ) {
         playerConnections[playerId] =
@@ -63,17 +68,8 @@ data class GameLobby(
         playerConnections.remove(playerId)
     }
 
-    fun sendToPlayer(
-        playerId: PlayerId,
-        data: ByteArray,
-    ) {
-        val connection = checkNotNull(playerConnections[playerId]) { "Unknown playerId: $playerId" }
-        val packet = DatagramPacket(data, 0, data.size, connection.destination)
-        lobbySocket.send(packet)
-    }
-
     private fun listeningLoop() {
-        log.info { "Listening for messages" }
+        log.info { "Listening for messages on port ${lobbySocket.port}" }
 
         while (true) {
             if (closing) return
@@ -95,7 +91,16 @@ data class GameLobby(
     }
 
     private fun onDataReceived(bytes: ByteArray) {
-        log.info { "Received: ${bytes.toString(Charsets.UTF_8)}" }
+        log.trace { "Received: ${bytes.toString(Charsets.UTF_8)}" }
+        publishEvent(GameEvent.DataReceived(bytes))
+    }
+
+    fun broadcast(bytes: ByteArray) {
+        playerConnections.forEach { (playerId, connection) ->
+            log.debug { "Sending to playerId $playerId: ${bytes.toString(Charsets.UTF_8)}" }
+            lobbySocket.send(DatagramPacket(bytes, bytes.size, connection.destination))
+        }
+        publishEvent(GameEvent.DataSent)
     }
 
     override fun close() {

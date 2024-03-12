@@ -38,6 +38,6 @@ data class ReceivedMessage(override val command: String, override val args: List
 
     private fun parseAddress(destination: Any): InetSocketAddress {
         val split = (destination as String).split(":")
-        return InetSocketAddress.createUnresolved(split[0], split[1].toInt())
+        return InetSocketAddress(split[0], split[1].toInt())
     }
 }

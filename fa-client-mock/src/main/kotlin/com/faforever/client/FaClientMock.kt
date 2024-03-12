@@ -7,7 +7,6 @@ import com.faforever.gpgnet.protocol.CreateLobbyMessage
 import com.faforever.gpgnet.protocol.HostGameMessage
 import com.faforever.gpgnet.protocol.JoinGameMessage
 import com.faforever.gpgnet.protocol.LobbyInitMode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import io.github.oshai.kotlinlogging.KotlinLogging
 import java.net.InetSocketAddress
 
@@ -19,12 +18,10 @@ class FaClientMock(
     val userId: Int = 666,
 ) : AutoCloseable {
     private val gpgnetServer = GpgnetServer(publishEvent = ::publishEvent)
-    private val objectMapper = jacksonObjectMapper()
 
     val gpgnetPort: Int get() = gpgnetServer.port
 
     private val eventListeners = mutableListOf<ClientEventListener>()
-    private var closed = false
 
     fun connectToGame() {
         verifyGameState<InitGameState>()

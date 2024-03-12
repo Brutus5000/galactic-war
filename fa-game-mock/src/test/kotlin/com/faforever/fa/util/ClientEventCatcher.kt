@@ -3,7 +3,7 @@ package com.faforever.fa.util
 import com.faforever.client.event.ClientEvent
 import com.faforever.client.event.ClientEventListener
 
-data class EventCatcher(
+data class ClientEventCatcher(
     val eventType: Class<ClientEvent>,
 ) : ClientEventListener(filter = { it.javaClass == eventType }) {
     var caught: Boolean = false
