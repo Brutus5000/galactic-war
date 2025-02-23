@@ -39,7 +39,7 @@ class GpgnetClient(
     fun runLoop() {
         log.info { "gpgnetLoop started" }
 
-        Thread {
+        Thread.startVirtualThread {
             reader.lines()
                 .filter { it.isNotBlank() }
                 .map { objectMapper.readValue<ReceivedMessage>(it).tryParse() }
@@ -51,7 +51,7 @@ class GpgnetClient(
 
                     gameState = gameState.process(message)
                 }
-        }.start()
+        }
 
         gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage, publishEvent = publishEvent)
     }
