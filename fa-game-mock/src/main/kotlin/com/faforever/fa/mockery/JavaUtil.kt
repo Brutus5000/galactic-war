@@ -7,7 +7,7 @@ object JavaUtil {
         listOf(
             *classPath.split(CLASSPATH_SEPARATOR.toRegex())
                 .dropLastWhile { it.isEmpty() }
-                .toTypedArray()
+                .toTypedArray(),
         )
     }
 }

@@ -2,15 +2,11 @@ package com.faforever.fa
 
 import com.faforever.fa.event.GameEvent
 import com.faforever.fa.util.SocketFactory
+import com.faforever.gpgnet.io.FaStreamReader
+import com.faforever.gpgnet.io.FaStreamWriter
 import com.faforever.gpgnet.protocol.GpgnetMessage
-import com.faforever.gpgnet.protocol.ReceivedMessage
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import io.github.oshai.kotlinlogging.KotlinLogging
-import java.io.BufferedReader
-import java.io.BufferedWriter
-import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 
 private val log = KotlinLogging.logger {}
 
@@ -31,8 +27,8 @@ class GpgnetClient(
 
     private lateinit var gameState: GameState
 
-    private val writer = BufferedWriter(OutputStreamWriter(gpgnetSocket.getOutputStream()))
-    private val reader = BufferedReader(InputStreamReader(gpgnetSocket.getInputStream()))
+    private val writer = FaStreamWriter(gpgnetSocket.getOutputStream())
+    private val reader = FaStreamReader(gpgnetSocket.getInputStream())
 
     private val objectMapper = jacksonObjectMapper()
 
@@ -40,28 +36,23 @@ class GpgnetClient(
         log.info { "gpgnetLoop started" }
 
         Thread.startVirtualThread {
-            reader.lines()
-                .filter { it.isNotBlank() }
-                .map { objectMapper.readValue<ReceivedMessage>(it).tryParse() }
-                .forEach { message ->
-                    log.debug { "Received GpgNet message from client: $message" }
-                    check(message is GpgnetMessage.ToGameMessage) {
-                        "Received invalid or unparseable message $message"
-                    }
-
-                    gameState = gameState.process(message)
+            while (!Thread.interrupted()) {
+                val message = reader.readMessage()
+                log.debug { "Received GpgNet message from client: $message" }
+                check(message is GpgnetMessage.ToGameMessage) {
+                    "Received invalid or unparseable message $message"
                 }
+
+                gameState = gameState.process(message)
+            }
         }
 
         gameState = IdleGameState(sendGpgnetMessage = this::sendGpgnetMessage, publishEvent = publishEvent)
     }
 
     private fun sendGpgnetMessage(fromGameMessage: GpgnetMessage.FromGameMessage) {
-        val message = objectMapper.writeValueAsString(fromGameMessage)
-        log.debug { "Sending GpgNet message: $message" }
-        writer.write(message)
-        writer.newLine()
-        writer.flush()
+        log.debug { "Sending GpgNet message: $fromGameMessage" }
+        writer.writeMessage(fromGameMessage)
     }
 
     override fun close() {
