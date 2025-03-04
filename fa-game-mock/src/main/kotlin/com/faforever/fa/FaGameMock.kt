@@ -38,11 +38,9 @@ class FaGameMock(
         }
     }
 
-    fun runInVirtualThread() {
-        Thread.startVirtualThread {
+    fun runInVirtualThread() = Thread.startVirtualThread {
             gpgnetProcess.runLoop()
         }
-    }
 
     private fun onLobbyOpened(event: GameEvent.LobbyOpened) {
         val gameLobby = event.gameLobby

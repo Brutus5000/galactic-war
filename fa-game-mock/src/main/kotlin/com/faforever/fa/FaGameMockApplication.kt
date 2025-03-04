@@ -185,12 +185,16 @@ class FaGameMockApplication : Callable<Int> {
         log.info { userOptions }
         log.info { commanderOptions }
 
-        FaGameMock(
+        val mainThread = FaGameMock(
             launchOptions = launchOptions,
             userOptions = userOptions,
             commanderOptions = commanderOptions,
             gameProcessOptions = gameProcessOptions,
         ).runInVirtualThread()
+
+        while(!mainThread.isInterrupted) {
+            Thread.sleep(1000)
+        }
 
         return 0
     }
