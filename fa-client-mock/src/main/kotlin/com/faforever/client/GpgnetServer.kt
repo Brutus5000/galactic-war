@@ -2,6 +2,8 @@ package com.faforever.client
 
 import com.faforever.client.event.ClientEvent
 import com.faforever.client.util.SocketFactory
+import com.faforever.gpgnet.io.FaStreamReader
+import com.faforever.gpgnet.io.FaStreamWriter
 import com.faforever.gpgnet.protocol.GpgnetMessage
 import com.faforever.gpgnet.protocol.ReceivedMessage
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -29,10 +31,8 @@ class GpgnetServer(
         )
         private set
 
-    private var writer: BufferedWriter? = null
-    private var reader: BufferedReader? = null
-
-    private val objectMapper = jacksonObjectMapper()
+    private var writer: FaStreamWriter? = null
+    private var reader: FaStreamReader? = null
 
     val port: Int get() = gpgnetSocket.localPort
 
@@ -42,21 +42,19 @@ class GpgnetServer(
         runCatching {
             gpgnetSocket.accept().also {
                 log.info { "Game connection accepted (localPort=${it.localPort}, port=${it.port})" }
-                writer = BufferedWriter(OutputStreamWriter(it.getOutputStream()))
-                reader = BufferedReader(InputStreamReader(it.getInputStream()))
+                writer = FaStreamWriter(it.getOutputStream())
+                reader = FaStreamReader(it.getInputStream())
             }
 
-            reader!!.lines()
-                .filter { it.isNotBlank() }
-                .map { objectMapper.readValue<ReceivedMessage>(it).tryParse() }
-                .forEach { message ->
-                    log.debug { "Received GpgNet message from game: $message" }
-                    check(message is GpgnetMessage.FromGameMessage) {
-                        "Received invalid or unparseable message $message"
-                    }
+            while (!Thread.interrupted()) {
+                val message = reader!!.readMessage()
 
-                    gameState = gameState.receive(message)
+                check(message is GpgnetMessage.FromGameMessage) {
+                    "Received invalid or unparseable message $message"
                 }
+
+                gameState = gameState.receive(message)
+            }
         }.onFailure {
             log.error(it) { "Game connection failed to process" }
         }
@@ -67,11 +65,8 @@ class GpgnetServer(
     }
 
     fun sendGpgnetMessage(toGameMessage: GpgnetMessage.ToGameMessage) {
-        val message = objectMapper.writeValueAsString(toGameMessage)
-        log.debug { "Sending GpgNet message: $message" }
-        writer!!.write(message)
-        writer!!.newLine()
-        writer!!.flush()
+        log.debug { "Sending GpgNet message: $toGameMessage" }
+        writer!!.writeMessage(toGameMessage)
     }
 
     override fun close() {
